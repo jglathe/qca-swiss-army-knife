@@ -34,7 +34,7 @@ BRANCH_PRIORITY_FILE = '.priority'
 WHENCE_FILE = 'WHENCE'
 NOTICE_FILE = 'Notice.txt'
 NOTICE_FILE_LEN_MIN = 5000
-ATH11K_DIR = 'ath11k'
+ATH12K_DIR = 'ath12k'
 TESTING_BRANCH = 'testing'
 
 FIRMWARE_BLACKLIST = [
@@ -463,14 +463,14 @@ def install_file(args, srcpath, destdir, destfilename):
 
 
 def get_firmware_version(path):
-    cmd = ['ath11k-fwencoder', '--info', path]
+    cmd = ['ath12k-fwencoder', '--info', path]
     info = subprocess.check_output(cmd, universal_newlines=True)
     msg = email.message_from_string(info)
     return msg['FirmwareVersion']
 
 
 def get_board_crc32(path):
-    cmd = ['ath11k-fwencoder', '--crc32', path]
+    cmd = ['ath12k-fwencoder', '--crc32', path]
     return subprocess.check_output(cmd, universal_newlines=True).strip()
 
 
@@ -547,7 +547,7 @@ def whence_add(linux_firmware, filepaths, version=None):
     buf = f.read()
     f.close()
 
-    pattern = r'(Driver: ath11k.*?\n\n.*?)\n\n'
+    pattern = r'(Driver: ath12k.*?\n\n.*?)\n\n'
 
     # \g<1> is same as \1 but needed to separate from the version string
     replace = r'\g<1>\n'
@@ -693,18 +693,18 @@ def cmd_list_releases(args):
 
 def cmd_list_lib_dir(args):
     fw_dir = args.list_lib_dir[0]
-    ath11k_dir = os.path.join(fw_dir, ATH11K_DIR)
+    ath12k_dir = os.path.join(fw_dir, ATH12K_DIR)
 
-    if not os.path.exists(ath11k_dir):
-        logger.error('directory %s does not exist, aborting' % (ath11k_dir))
+    if not os.path.exists(ath12k_dir):
+        logger.error('directory %s does not exist, aborting' % (ath12k_dir))
         sys.exit(1)
 
-    if not os.path.isdir(ath11k_dir):
-        logger.error('%s is not a directory, aborting' % (ath11k_dir))
+    if not os.path.isdir(ath12k_dir):
+        logger.error('%s is not a directory, aborting' % (ath12k_dir))
         sys.exit(1)
 
     # sort the results based on dirpath
-    for (dirpath, dirnames, filenames) in sorted(os.walk(ath11k_dir)):
+    for (dirpath, dirnames, filenames) in sorted(os.walk(ath12k_dir)):
         found = []
         for filename in sorted(filenames):
             path = os.path.join(dirpath, filename)
@@ -808,16 +808,16 @@ def cmd_install(args):
     hws = scan_repository('.')
 
     linux_firmware = args.install[0]
-    ath11kdir = os.path.join(linux_firmware, ATH11K_DIR)
+    ath12kdir = os.path.join(linux_firmware, ATH12K_DIR)
 
-    if not os.path.exists(ath11kdir):
-        os.makedirs(ath11kdir)
+    if not os.path.exists(ath12kdir):
+        os.makedirs(ath12kdir)
 
-    if not os.path.isdir(ath11kdir):
-        logger.error('%s is not a directory' % (ath11kdir))
+    if not os.path.isdir(ath12kdir):
+        logger.error('%s is not a directory' % (ath12kdir))
         sys.exit(1)
 
-    logger.debug('Installing to directory %s' % (ath11kdir))
+    logger.debug('Installing to directory %s' % (ath12kdir))
 
     for hw in sorted(hws.values()):
         bd_list = hw.board_files
@@ -830,13 +830,13 @@ def cmd_install(args):
             logger.debug('no firmware images found for %s' % (hw))
             continue
 
-        destdir = os.path.join(ath11kdir, hw.get_path())
+        destdir = os.path.join(ath12kdir, hw.get_path())
 
         # install board files first as that's used as an "anchor" for
         # firmware files WHENCE updates
         for bd in bd_list:
             installed = []
-            dest = os.path.join(ath11kdir, bd.path)
+            dest = os.path.join(ath12kdir, bd.path)
             if not os.path.exists(dest) or not filecmp.cmp(bd.path, dest):
                 if os.path.exists(dest):
                     action = 'update'
@@ -855,7 +855,7 @@ def cmd_install(args):
 
                 git_add(args, linux_firmware, installed)
 
-                msg = 'ath11k: %s: %s %s' % (hw.name,
+                msg = 'ath12k: %s: %s %s' % (hw.name,
                                              action,
                                              bd.get_basename())
                 git_commit(args, msg, linux_firmware, installed)
@@ -910,7 +910,7 @@ def cmd_install(args):
                                     fw.notice_filename)
             installed.append(destpath)
 
-            # TODO: whence is not working with ath11k
+            # TODO: whence is not working with ath12k
             if action == 'update':
                 # updating an existing firmware file
                 whencepath = whence_update(linux_firmware, installed, fw.fw_ver)
@@ -924,7 +924,7 @@ def cmd_install(args):
             git_add(args, linux_firmware, installed)
 
             for filename in to_remove:
-                filepath = os.path.join(ath11kdir, hw.get_path(), filename)
+                filepath = os.path.join(ath12kdir, hw.get_path(), filename)
 
                 if os.path.basename(filepath) == 'regdb.bin':
                     logger.debug('ignore %s so that it is not removed from target' % (filepath))
@@ -939,8 +939,8 @@ def cmd_install(args):
                 git_rm(args, linux_firmware, [filepath])
                 installed.append(filepath)
 
-            # "ath11k: QCA6390 hw2.0: update to WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1"
-            msg = 'ath11k: %s: %s to %s' % (hw.name,
+            # "ath12k: QCA6390 hw2.0: update to WLAN.HST.1.0.1-01740-QCAHSTSWPLZ_V2_TO_X86-1"
+            msg = 'ath12k: %s: %s to %s' % (hw.name,
                                             action,
                                             fw.fw_ver)
 
@@ -952,10 +952,10 @@ def cmd_install(args):
 def main():
     global logger
 
-    logger = logging.getLogger('ath11k-fw-repo')
+    logger = logging.getLogger('ath12k-fw-repo')
 
     parser = argparse.ArgumentParser(
-        description='Install firmware images from the ath11k-firmware git repository. Run it from the top directory of the working tree.')
+        description='Install firmware images from the ath12k-firmware git repository. Run it from the top directory of the working tree.')
 
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug messages.')
@@ -963,12 +963,12 @@ def main():
                         help='Do not run any actual commands.')
 
     parser.add_argument('--check', action='store_true',
-                        help='Check the ath11k-firmware repository content for validity.')
+                        help='Check the ath12k-firmware repository content for validity.')
     parser.add_argument('--list', action='store_true',
-                        help='List all files found from the ath11k-firmware repository.')
+                        help='List all files found from the ath12k-firmware repository.')
 
     parser.add_argument('--list-hardware', action='store_true',
-                        help='List all possible hardware versions found from the ath11k-firmware repository.')
+                        help='List all possible hardware versions found from the ath12k-firmware repository.')
 
     parser.add_argument('--list-branches', action='store',
                         nargs=2,
@@ -983,7 +983,7 @@ def main():
                         help='List all files found from the specified directory, which can either be a linux-firmware repository or /lib/firmware directory.')
 
     parser.add_argument('--install', action='store', nargs=1, metavar='DESTINATION',
-                        help='Install all ath11k firmware images to DESTINATION folder, for example /lib/firmware.')
+                        help='Install all ath12k firmware images to DESTINATION folder, for example /lib/firmware.')
 
     parser.add_argument('--commit', action='store_true',
                         help='When installing files also git commit them, for example when updating linux-firmware.git.')

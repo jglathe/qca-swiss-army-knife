@@ -31,8 +31,8 @@ import string
 import hashlib
 import shutil
 
-CHECKPATCH_COMMIT = '362173572a4018e9c8e39c616823189c41d39d41'
-CHECKPATCH_MD5SUM = '47ef327d772c156e53a36597723fc781'
+CHECKPATCH_COMMIT = '296455ade1fdcf5f8f8c033201633b60946c589a'
+CHECKPATCH_MD5SUM = '77c655474ed7622c0077caf2f0d7c440'
 
 GIT_URL = 'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/scripts/checkpatch.pl?id=%s'
 
@@ -80,6 +80,9 @@ checkpatch_filter = [
 
     # __ath12k_dbg has to use dev_printk() so that debug_mask always work
     ('__ath12k_dbg', 'PREFER_DEV_LEVEL'),
+
+    # couldn't figure a way to avoid the reuse warning
+    ('for_each_ar', 'MACRO_ARG_REUSE'),
 ]
 
 sparse_filter = []
@@ -215,16 +218,30 @@ def parse_checkpatch_warning(line):
 
 
 def is_filtered(cpwarning):
-    if cpwarning.tag is None:
-        return False
-
     for (tag, type) in checkpatch_filter:
-        matchobj = re.match(tag, cpwarning.tag)
-        if matchobj is None:
-            continue
+        if cpwarning.tag is not None:
+            # the global tool was able to find a tag name for this
+            # line so use it directly
+            matchobj = re.match(tag, cpwarning.tag)
+            if matchobj is None:
+                continue
 
-        if cpwarning.type == type:
-            return True
+            if cpwarning.type == type:
+                return True
+        else:
+            # the global tool was not able to find a tag name for this
+            # line so instead check the actual line in the file
+            f = open(cpwarning.path)
+            buf = f.read()
+            f.close()
+
+            lineno = int(cpwarning.lineno) - 1
+            lines = buf.splitlines()
+            line = lines[lineno]
+            logger.debug('file %r tag %r line %r' % (cpwarning.path, tag, line))
+
+            if tag in line:
+                return True
 
     return False
 
@@ -274,6 +291,11 @@ def run_checkpatch_cmd(args, q, tag_map):
 
         q.task_done()
 
+# get all driver files which are commited to git, includes Kconfig, Makefile etc
+def get_commited_files():
+    cmd = ['git', 'ls-tree', '--name-only', 'HEAD', DRIVER_DIR]
+    output = subprocess.check_output(cmd, universal_newlines=True)
+    return output.splitlines()
 
 def run_checkpatch(args):
     md5sum = get_checkpatch_md5sum()
@@ -281,10 +303,7 @@ def run_checkpatch(args):
         print('WARNING: checkpatch.pl md5sum %s does not match with %s' %
               (md5sum, CHECKPATCH_MD5SUM))
 
-    # get all files which need to be checked
-    cmd = 'git ls-tree HEAD %s | cut -f 2' % (DRIVER_DIR)
-    output = subprocess.check_output(cmd, shell=True, universal_newlines=True)
-    driver_files = output.splitlines()
+    driver_files = get_commited_files()
 
     # drop files we need to ignore
     for name in IGNORE_FILES:
@@ -346,6 +365,10 @@ def run_checkpatch(args):
 
     return 0
 
+def run_kdoc(args):
+    p = subprocess.run(['scripts/kernel-doc', '-Werror', '-none'] +
+                       get_commited_files())
+    return p.returncode
 
 def show_version(args):
     host_gcc_version = 'not found'
@@ -562,6 +585,11 @@ $CHECKPATCH_CMDLINE
         if ret != 0:
             logger.debug('checkpatch failed: %d', ret)
             sys.exit(3)
+
+    ret = run_kdoc(args)
+    if ret != 0:
+        logger.debug('kernel-doc failed: %d', ret)
+        sys.exit(4)
 
 if __name__ == "__main__":
     main()
