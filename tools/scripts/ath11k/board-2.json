@@ -711,15 +711,9 @@
             },
             {
                 "names": [
-                    "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e130,qmi-chip-id=2,qmi-board-id=255,variant=AS_SA_X16QA"
-                ],
-                "data": "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e0c4,qmi-chip-id=2,qmi-board-id=255,variant=HP_G8_Lancia14.bin"
-            },
-            {
-                "names": [
                     "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e130,qmi-chip-id=18,qmi-board-id=255,variant=AS_SA_X16QA"
                 ],
-                "data": "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e0c4,qmi-chip-id=18,qmi-board-id=255,variant=HP_G8_Lancia14.bin"
+                "data": "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e105,qmi-chip-id=18,qmi-board-id=255,variant=QC_Hamoa_IOT_EVK.bin"
             }
         ],
         "regdb": [
@@ -757,7 +751,6 @@
                     "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e0c4,qmi-chip-id=18,qmi-board-id=255,variant=HP_G8_Petrof",
                     "bus=pci,vendor=17cb,device=1103,subsystem-vendor=103c,subsystem-device=8d9a,qmi-chip-id=2,qmi-board-id=255",
                     "bus=pci,vendor=17cb,device=1103,subsystem-vendor=103c,subsystem-device=8d9a,qmi-chip-id=18,qmi-board-id=255",
-                    "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e130,qmi-chip-id=2,qmi-board-id=255,variant=AS_SA_X16QA",
                     "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e130,qmi-chip-id=18,qmi-board-id=255,variant=AS_SA_X16QA"
                 ],
                 "data": "bus=pci,vendor=17cb,device=1103,subsystem-vendor=105b,subsystem-device=e0bb,qmi-chip-id=2,qmi-board-id=255.regdb"
